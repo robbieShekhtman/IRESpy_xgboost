@@ -14,7 +14,7 @@ def save_kmer_features_to_hdf5(csv_file_path, output_h5_path, k_values=[1, 2, 3,
     """
     # Read all sequences
     df = pd.read_csv(csv_file_path)
-    sequences = df['sequence'].tolist()  # Adjust column name
+    sequences = df['Sequence'].tolist()  # Adjust column name
     
     total_features = sum(4**k for k in k_values)
     n_sequences = len(sequences)
