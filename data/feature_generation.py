@@ -15,6 +15,11 @@ def save_kmer_features_to_hdf5(csv_file_path, output_h5_path, k_values=[1, 2, 3,
     # Read all sequences
     df = pd.read_csv(csv_file_path)
     sequences = df['Sequence'].tolist()  # Adjust column name
+
+    # Add an explicit Index column that matches the sequence index used for k-mer features
+    # This ensures the CSV contains a column named 'Index' matching the HDF5 'sequence_ids'
+    if 'Index' not in df.columns:
+        df['Index'] = df.index.values.astype(int)
     
     total_features = sum(4**k for k in k_values)
     n_sequences = len(sequences)
@@ -36,7 +41,7 @@ def save_kmer_features_to_hdf5(csv_file_path, output_h5_path, k_values=[1, 2, 3,
         hf.create_dataset('feature_names', data=[name.encode() for name in feature_names])
         
         # Store sequence identifiers
-        hf.create_dataset('sequence_ids', data=df.index.values.astype(int))
+        hf.create_dataset('sequence_ids', data=df['Index'].values.astype(int))
         
         # Process and store features
         for seq_idx, sequence in enumerate(sequences):
