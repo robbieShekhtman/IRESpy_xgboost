@@ -215,7 +215,7 @@ def evaluate(m: XGBClassifier,X: np.ndarray,y: np.ndarray,split: str):
         return
     
     proba = m.predict_proba(X)[:, 1]
-    pred = (proba >= 0.5).astype(int)
+    pred = (proba >= 0.2).astype(int) #use desicion threshold of 20%
     
     auc = roc_auc_score(y, proba)
     acc = accuracy_score(y, pred)
