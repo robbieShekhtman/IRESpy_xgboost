@@ -1,87 +1,89 @@
+"""kmer feature generations script"""
+
 import numpy as np
 from itertools import product
 import pandas as pd
 import h5py
 import os
 
-def generate_all_kmers(k, alphabet='ACGU'):
-    """Generate all possible k-mers of length k"""
-    return [''.join(comb) for comb in product(alphabet, repeat=k)]
+def gen_kmers(k):
+    res = []
 
-def save_kmer_features_to_hdf5(csv_file_path, output_h5_path, k_values=[1, 2, 3, 4]):
-    """
-    Save k-mer features to HDF5 format for efficient storage and access
-    """
-    # Read all sequences
-    df = pd.read_csv(csv_file_path)
-    sequences = df['Sequence'].tolist()  # Adjust column name
+    for i in product('ACGU', repeat=k):
+        kmer = ''.join(i)
+        res.append(kmer)
 
-    # Add an explicit Index column that matches the sequence index used for k-mer features
-    # This ensures the CSV contains a column named 'Index' matching the HDF5 'index'
-    if 'Index' not in df.columns:
-        df['Index'] = df.index.values.astype(int)
+    return res
+
+def gen(csv, out, k_values=[1, 2, 3, 4]):
+
     
-    total_features = sum(4**k for k in k_values)
-    n_sequences = len(sequences)
+    df = pd.read_csv(csv)
+    df2 = df[df['split'] == 'train'].copy()
+    sequences = df2['Sequence'].tolist()
     
-    # Generate feature names
-    feature_names = []
-    for k in k_values:
-        kmers = generate_all_kmers(k)
-        feature_names.extend([f'kmer_{k}_{kmer}' for kmer in kmers])
+    num_feats = 0
+    for i in k_values:
+        num_feats += 4**i
+    num_seqs = len(sequences)
+    names = []
+
+
+
+    for i in k_values:
+        kmers = gen_kmers(i)
+        for j in kmers:
+            names.append(f'kmer_{i}_{j}')
     
-    # Create HDF5 file
-    with h5py.File(output_h5_path, 'w') as hf:
-        # Create dataset for features
-        features_dset = hf.create_dataset('kmer_features', 
-                                         shape=(n_sequences, total_features),
-                                         dtype=np.float32)
+    with h5py.File(out, 'w') as hf:
+        main_dset = hf.create_dataset('kmer_features', shape=(num_seqs, num_feats), dtype=np.float32)
+        x = []
+        for name in names:
+            x.append(name.encode())
+        hf.create_dataset('feature_names', data=x)
+        hf.create_dataset('index', data=df2['Index'].values.astype(int))
         
-        # Store feature names
-        hf.create_dataset('feature_names', data=[name.encode() for name in feature_names])
-        
-        # Store sequence identifiers (as 'index' to match CSV column name)
-        hf.create_dataset('index', data=df['Index'].values.astype(int))
-        
-        # Process and store features
-        for seq_idx, sequence in enumerate(sequences):
-            if seq_idx % 1000 == 0:
-                print(f"Processing sequence {seq_idx}/{n_sequences}")
+        for i in range(len(sequences)):
+            s = sequences[i]
+            print(f"Processing sequence {i}")
             
-            feature_vector = np.zeros(total_features, dtype=np.float32)
-            seq_len = len(sequence)
-            feature_idx = 0
+            vec = np.zeros(num_feats, dtype=np.float32)
+            slen = len(s)
+            feat_id = 0
             
-            for k in k_values:
-                kmers = generate_all_kmers(k)
+            for j in k_values:
+                kmers = gen_kmers(j)
                 
-                # Count k-mers
-                kmer_counts = {}
-                for i in range(0, len(sequence) - k + 1):
-                    kmer = sequence[i:i+k]
-                    kmer_counts[kmer] = kmer_counts.get(kmer, 0) + 1
+                k_counts = {}
+                for k in range(0, len(s) - j + 1):
+                    kmer = s[k:k+j]
+                    k_counts[kmer] = k_counts.get(kmer, 0) + 1
                 
-                # Calculate frequencies
-                for kmer in kmers:
-                    count = kmer_counts.get(kmer, 0)
-                    frequency = count / seq_len if seq_len > 0 else 0
-                    feature_vector[feature_idx] = frequency
-                    feature_idx += 1
+
+                for k in kmers:
+                    count = k_counts.get(k, 0)
+
+                    if slen > 0:
+                        freq = count / slen 
+                    else:
+                        freq = 0
+
+
+                    vec[feat_id] = freq
+                    feat_id += 1
             
-            # Store in HDF5
-            features_dset[seq_idx] = feature_vector
+            main_dset[i] = vec
     
-    print(f"K-mer features saved to {output_h5_path}")
-    return output_h5_path
-
-# Usage
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
-processed_dir = os.path.join(project_root, 'data', 'processed')
-csv_file_path = os.path.join(processed_dir, 'filtered_data_with_split.csv')
+    return out
 
 
+
+
+
+script = os.path.dirname(os.path.abspath(__file__))
+root = os.path.dirname(script)
+processed = os.path.join(root, 'data', 'processed')
+csv = os.path.join(processed, 'filtered_data_with_split.csv')
 
 if __name__ == "__main__":
-    # Example usage 
-    h5_output = save_kmer_features_to_hdf5(csv_file_path, os.path.join(processed_dir, "kmer_features.h5"))
+    h5_output = gen(csv, os.path.join(processed, "kmer_features.h5"))
