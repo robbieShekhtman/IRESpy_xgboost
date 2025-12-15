@@ -12,7 +12,8 @@ def main():
     processed_dir = os.path.join(project_root, 'data', 'processed')
     input_file = os.path.join(processed_dir, 'filtered_data.csv')
     output_file = os.path.join(processed_dir, 'filtered_data_with_split.csv')
-    
+
+
     try:
         df = pd.read_csv(input_file, low_memory=False)
     except Exception as e:
@@ -20,28 +21,33 @@ def main():
     
     if 'label' not in df.columns:
         sys.exit(1)
+
     X = df.drop('label', axis=1)
-    y = df['label']
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
-    )
-    X_test, X_val, y_test, y_val = train_test_split(
-        X_temp, y_temp, test_size=0.5, stratify=y_temp, random_state=42
-    )
-    train_df = X_train.copy()
-    train_df['label'] = y_train.values
-    train_df['split'] = 'train'
-    test_df = X_test.copy()
-    test_df['label'] = y_test.values
-    test_df['split'] = 'test'
-    val_df = X_val.copy()
-    val_df['label'] = y_val.values
-    val_df['split'] = 'val'
+    Y = df['label']
+
+    Xtr, Xtmp, Ytr, Ytmp = train_test_split( X, Y, test_size=0.2, stratify=Y, random_state=42)
+    Xtst, Xval, Ytst, Yval = train_test_split(Xtmp, Ytmp, test_size=0.5, stratify=Ytmp, random_state=42)
+
+    train = Xtr.copy()
+    train['label'] = Ytr.values
+    train['split'] = 'train'
+
+
+    test = Xtst.copy()
+    test['label'] = Ytst.values
+    test['split'] = 'test'
+
+
+    validate = Xval.copy()
+    validate['label'] = Yval.values
+    validate['split'] = 'val'
     
-    df_with_split = pd.concat([train_df, test_df, val_df], ignore_index=True)
-    original_cols = list(df.columns)
-    df_with_split = df_with_split[original_cols + ['split']]
-    df_with_split.to_csv(output_file, index=False)
+    wpslit = pd.concat([train, test, validate], ignore_index=True)
+    origninal = list(df.columns)
+
+    
+    wpslit = wpslit[origninal + ['split']]
+    wpslit.to_csv(output_file, index=False)
 
 
 if __name__ == '__main__':
