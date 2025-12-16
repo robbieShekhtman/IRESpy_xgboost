@@ -11,6 +11,7 @@ import ushuffle as ushuffle_pkg
 
 
 def run_rnafold(seq):
+    "runs rnafold on sequence and returns mfe value"
     p = subprocess.run( ['RNAfold', '--noPS'], input=seq, capture_output=True, text=True, timeout=30, check=False)
         
     if p.returncode != 0:
@@ -27,6 +28,7 @@ def run_rnafold(seq):
     return None
 
 def generate_shuffled_sequences(seq , n):
+    "generates n shuffled sequences from input sequence"
     b = seq.encode('utf-8')
     shuffled = []
     for _ in range(n):
@@ -41,6 +43,7 @@ def generate_shuffled_sequences(seq , n):
 
 
 def compute_q_mfe_for_sequence(seq, mfe, n):
+    "computes q_mfe score for a sequence using n shuffled sequences"
     out = {'q_mfe': np.nan,'native_mfe': mfe,'shuffled_mfes': [],'n_shuffles_used': 0,'success': False}
     
     if mfe is None:
@@ -77,7 +80,7 @@ def compute_q_mfe_for_sequence(seq, mfe, n):
 
 
 def compute_q_mfe_for_indices(df, indices, n):
-    
+    "computes q_mfe for multiple indices from dataframe"
     q = []
     inds = []
     mfe = []
@@ -124,7 +127,7 @@ def compute_q_mfe_for_indices(df, indices, n):
 
 
 def save_q_mfe_features_to_hdf5(qvals, inds, mfes, out):
-
+    "saves q_mfe features to hdf5 file"
     with h5py.File(out, 'w') as f:
         f.create_dataset('index', data=inds.astype(int), dtype=int)
         f.create_dataset('native_mfe_subset', data=mfes.astype(np.float32), dtype=np.float32)
@@ -133,7 +136,7 @@ def save_q_mfe_features_to_hdf5(qvals, inds, mfes, out):
 
 
 def load_progress(pf):
-
+    "loads last processed index from progress file"
     if not os.path.exists(pf):
         return None
     
@@ -143,13 +146,13 @@ def load_progress(pf):
 
 
 def save_progress(file, ind):
-
+    "saves last processed index to progress file"
     with open(file, 'w') as f:
         f.write(str(ind))
 
 
 def get_next_batch_number(dir, base):
-
+    "gets next available batch number for output file"
     num = 0
     while True:
         bf = os.path.join(dir, f"{base}_batch_{num:04d}.h5")
@@ -159,7 +162,7 @@ def get_next_batch_number(dir, base):
 
 
 def main():
-    
+    "main function to compute and save q_mfe features in batches"
     sdir = os.path.dirname(os.path.abspath(__file__))
     root = os.path.dirname(sdir)
     processed_dir = os.path.join(root, 'data', 'processed')

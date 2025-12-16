@@ -6,6 +6,7 @@ import pandas as pd
 
 
 def main():
+    "script we used to add ires vs non ires labels to dataset"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     processed_dir = os.path.join(project_root, 'data', 'processed')

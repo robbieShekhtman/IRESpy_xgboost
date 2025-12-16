@@ -9,12 +9,14 @@ from lime.lime import LIME
 
 
 def load_model():
+    'loads trained xgboost model'
     m = XGBClassifier()
     m.load_model(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "model", "xgb_ires.model"))
     return m
 
 
 def get_features():
+    "returns list of feature column names"
     kt = load_kmer()
     ks = load_kmer_test()
     
@@ -38,6 +40,7 @@ def get_features():
 
 
 def get_samples(ni, nn, rs):
+    "builds samples of positive and negative instances"
     xt, yt, xv, yv, xs, ys = build_features()
 
     xa = np.vstack([xt, xv, xs])
@@ -64,6 +67,7 @@ def get_samples(ni, nn, rs):
 
 
 def print_details(e, lt, tk, idx):
+    "prints explanation details for a sample"
     print("\n")
     print(f"type: {lt} (Index: {idx})")
     print("\n")
@@ -113,6 +117,7 @@ def print_details(e, lt, tk, idx):
 
 
 def main():    
+    "runs lime explanations for sampled instances"
     ins = get_samples(1, 1, None)
     exp = LIME(load_model(), 4000, 0.7, 42)
     

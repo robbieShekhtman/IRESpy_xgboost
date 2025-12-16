@@ -6,6 +6,7 @@ import pandas as pd
 
 
 def main():
+    "our script we used to filter entires by labels described in base paper"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     raw_data_dir = os.path.join(project_root, 'data', 'raw')

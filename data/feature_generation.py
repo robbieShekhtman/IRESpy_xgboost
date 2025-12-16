@@ -6,7 +6,9 @@ import pandas as pd
 import h5py
 import os
 
+
 def gen_kmers(k):
+    "function to generate kmers"
     res = []
 
     for i in product('ACGU', repeat=k):
@@ -15,7 +17,10 @@ def gen_kmers(k):
 
     return res
 
+
+
 def gen(csv, out, k_values=[1, 2, 3, 4]):
+    "our main function here to output features into the hdf5 file"
 
     
     df = pd.read_csv(csv)

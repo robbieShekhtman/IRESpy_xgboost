@@ -7,7 +7,7 @@ from sklearn.linear_model import Lasso
 class LIME:
 
     def __init__(self, model, n , prob, rand):
-
+        "stores model and lime parameters"
         self.model = model
         self.n = n
         self.prob = prob
@@ -15,22 +15,23 @@ class LIME:
 
     
     def perturbations(self, x, n):
-
+        "creates masked perturbations of input"
         masks = np.random.binomial(1, self.prob, size=(self.n, n)).astype(np.float32)
         masks[0] = 1.0
         pert = x * masks
         return masks, pert
     
     def cosine_distance(self, x, xpert):
+        "computes cosine distance between original and perturbed"
         return np.clip(1.0 - np.dot(xpert / (np.linalg.norm(xpert, axis=1, keepdims=True) + 0.0000000001), x / (np.linalg.norm(x) + 0.0000000001)), 0.0, 2.0)
     
     def sim_weights(self, dists, n):
-        
+        "computes similarity weights from distances"
         return np.exp(-(dists ** 2) / (0.75 * np.sqrt(n) ** 2))
 
 
     def explain(self, x, names, alpha):
-
+        "builds lime explanation for one sample"
         x = np.asarray(x).flatten()
         n = len(x)
 

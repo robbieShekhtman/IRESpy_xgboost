@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 
 
 def main():
+    "script we used to stratify data into splits for training test and validation"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     processed_dir = os.path.join(project_root, 'data', 'processed')

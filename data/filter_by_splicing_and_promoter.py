@@ -4,8 +4,8 @@ import os
 import sys
 import pandas as pd
 
-
 def main():
+    "our script we used to filter entires by splicing score and promoter activity described in base paper"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     processed_dir = os.path.join(project_root, 'data', 'processed')

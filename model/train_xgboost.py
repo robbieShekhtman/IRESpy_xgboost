@@ -9,7 +9,7 @@ from sklearn.metrics import (roc_auc_score, accuracy_score, precision_score, rec
 from xgboost import XGBClassifier
 
 
-#bunch of globals consts that dont change
+#bunch of global consts that dont change
 dir = os.path.dirname(os.path.abspath(__file__))
 root = os.path.dirname(dir)
 data = os.path.join(root, "data", "processed")
@@ -23,6 +23,7 @@ random_state = 42
 
 
 def load_base():
+    "loads base dataframe with binary label"
     df = pd.read_csv(csv)
     df["label_bin"] = (df["label"].str.upper() == "IRES").astype(int)
     
@@ -30,7 +31,7 @@ def load_base():
 
 
 def load_kmer_file(path, ds):
-
+    "loads kmer features from hdf5 file"
     with h5py.File(path, "r") as f:
 
         X = f[ds][:]
@@ -51,13 +52,15 @@ def load_kmer_file(path, ds):
     return kmer
 
 def load_kmer():
+    "loads training kmer features"
     return load_kmer_file(kmer, "kmer_features")
 
 def load_kmer_test():
+    "loads test kmer features"
     return load_kmer_file(kmer_test, "kmer_features_test")
 
 def load_qmfe_train():
-
+    "loads q_mfe features for train splits"
     pattern = os.path.join(data, "q_mfe_features_batch_*.h5")
     files = sorted(glob.glob(pattern))
     indices = []
@@ -93,7 +96,7 @@ def load_qmfe_train():
 
 
 def load_qmfe_test():
-
+    "loads q_mfe features for test split"
     if not os.path.exists(struct):
         return pd.DataFrame(columns=["q_mfe"]).set_index(pd.Index([], name="Index"))
         
@@ -118,7 +121,7 @@ def load_qmfe_test():
 
 
 def build_features():
-
+    "builds combined feature matrices and labels"
     df = load_base()
     kmer_tr = load_kmer()
     kmer_tst = load_kmer_test()
@@ -170,7 +173,7 @@ def build_features():
 
 
 def train(Xtr, Ytr, Xval, Yval):
-
+    "trains xgboost classifier"
     m = XGBClassifier(
         objective="binary:logistic",
         eval_metric="logloss",
@@ -199,7 +202,7 @@ def train(Xtr, Ytr, Xval, Yval):
 
 
 def evaluate(m ,X ,y ,split):
-
+    "prints metrics for a data split"
     if X.shape[0] == 0:
         return
     
@@ -222,7 +225,7 @@ def evaluate(m ,X ,y ,split):
 
 
 def main():
-
+    "runs training, evaluation, and saves models"
     Xtr, Ytr, Xval, Yval, Xtst, Ytst = build_features()
     m = train(Xtr, Ytr, Xval, Yval)
     evaluate(m, Xtst, Ytst, "test")
