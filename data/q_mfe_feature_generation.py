@@ -10,7 +10,7 @@ import ushuffle as ushuffle_pkg
 
 
 
-def run_rnafold(seq: str):
+def run_rnafold(seq):
     p = subprocess.run( ['RNAfold', '--noPS'], input=seq, capture_output=True, text=True, timeout=30, check=False)
         
     if p.returncode != 0:
@@ -26,7 +26,7 @@ def run_rnafold(seq: str):
         return float(m.group(1))
     return None
 
-def generate_shuffled_sequences(seq: str,n: int = 100):
+def generate_shuffled_sequences(seq , n):
     b = seq.encode('utf-8')
     shuffled = []
     for _ in range(n):
@@ -40,7 +40,7 @@ def generate_shuffled_sequences(seq: str,n: int = 100):
     
 
 
-def compute_q_mfe_for_sequence(seq: str, mfe: Optional[float] = None, n: int = 100,):
+def compute_q_mfe_for_sequence(seq, mfe, n):
     out = {'q_mfe': np.nan,'native_mfe': mfe,'shuffled_mfes': [],'n_shuffles_used': 0,'success': False}
     
     if mfe is None:
@@ -76,7 +76,7 @@ def compute_q_mfe_for_sequence(seq: str, mfe: Optional[float] = None, n: int = 1
     return out
 
 
-def compute_q_mfe_for_indices(df: pd.DataFrame, indices: List[int], n: int = 100):
+def compute_q_mfe_for_indices(df, indices, n):
     
     q = []
     inds = []
@@ -96,7 +96,7 @@ def compute_q_mfe_for_indices(df: pd.DataFrame, indices: List[int], n: int = 100
         r = row.iloc[0]
         seq = r['Sequence']
         mfe = r['mfe']
-        res = compute_q_mfe_for_sequence(seq,mfe=mfe,n=n)
+        res = compute_q_mfe_for_sequence(seq,mfe,n)
         
         if res['success']:
             q.append(res['q_mfe'])
@@ -123,7 +123,7 @@ def compute_q_mfe_for_indices(df: pd.DataFrame, indices: List[int], n: int = 100
 
 
 
-def save_q_mfe_features_to_hdf5( qvals: np.ndarray, inds: np.ndarray, mfes: np.ndarray, out: str):
+def save_q_mfe_features_to_hdf5(qvals, inds, mfes, out):
 
     with h5py.File(out, 'w') as f:
         f.create_dataset('index', data=inds.astype(int), dtype=int)
@@ -132,7 +132,7 @@ def save_q_mfe_features_to_hdf5( qvals: np.ndarray, inds: np.ndarray, mfes: np.n
 
 
 
-def load_progress(pf: str):
+def load_progress(pf):
 
     if not os.path.exists(pf):
         return None
@@ -142,13 +142,13 @@ def load_progress(pf: str):
     return ind
 
 
-def save_progress(file: str, ind: int):
+def save_progress(file, ind):
 
     with open(file, 'w') as f:
         f.write(str(ind))
 
 
-def get_next_batch_number(dir: str, base: str):
+def get_next_batch_number(dir, base):
 
     num = 0
     while True:
@@ -187,10 +187,10 @@ def main():
         print("nothing left")
         sys.exit(0)
     
-    qvals, inds, mfes, last = compute_q_mfe_for_indices(df=df,indices=unprocessed, n=100)
+    qvals, inds, mfes, last = compute_q_mfe_for_indices(df, unprocessed, 100)
 
     bnum = get_next_batch_number(processed_dir, 'q_mfe_features')
-    out = os.path.join(processed_dir, f'q_mfe_features_batch_{bnum:04d}.h5')
+    out = os.path.join(processed_dir, f'q_mfe_features_batch_{bnum}.h5')
     save_q_mfe_features_to_hdf5(qvals, inds, mfes,out )
         
     if last is not None:

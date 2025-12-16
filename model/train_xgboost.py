@@ -1,18 +1,11 @@
 """script to train and evaluate the model"""
 
 import os
-import warnings
 import numpy as np
 import pandas as pd
 import h5py
 import glob
-from typing import List
-from sklearn.metrics import (
-    roc_auc_score,
-    accuracy_score,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import (roc_auc_score, accuracy_score, precision_score, recall_score)
 from xgboost import XGBClassifier
 
 
@@ -36,7 +29,7 @@ def load_base():
     return df
 
 
-def load_kmer_file(path: str, ds: str = "kmer_features"):
+def load_kmer_file(path, ds):
 
     with h5py.File(path, "r") as f:
 
@@ -61,10 +54,6 @@ def load_kmer():
     return load_kmer_file(kmer, "kmer_features")
 
 def load_kmer_test():
-
-    if not os.path.exists(kmer_test):
-        return pd.DataFrame()
-    
     return load_kmer_file(kmer_test, "kmer_features_test")
 
 def load_qmfe_train():
@@ -74,7 +63,7 @@ def load_qmfe_train():
     indices = []
     q_vals = []
 
-    if len(files) ==0:
+    if len(files) == 0:
         return pd.DataFrame(columns=["q_mfe"]).set_index(pd.Index([], name="Index"))
     
     for i in files:
@@ -180,7 +169,7 @@ def build_features():
     return Xtr, Ytr, Xval, Yval, Xtst, Ytst
 
 
-def train(Xtr: np.ndarray, Ytr: np.ndarray, Xval: np.ndarray,Yval: np.ndarray):
+def train(Xtr, Ytr, Xval, Yval):
 
     m = XGBClassifier(
         objective="binary:logistic",
@@ -196,7 +185,7 @@ def train(Xtr: np.ndarray, Ytr: np.ndarray, Xval: np.ndarray,Yval: np.ndarray):
         n_estimators=2000,
         random_state=random_state,
         n_jobs=-1,
-        tree_method="hist",
+        tree_method="hist"
     )
     
     if Xval.shape[0] > 0:
@@ -209,7 +198,7 @@ def train(Xtr: np.ndarray, Ytr: np.ndarray, Xval: np.ndarray,Yval: np.ndarray):
     return m
 
 
-def evaluate(m: XGBClassifier,X: np.ndarray,y: np.ndarray,split: str):
+def evaluate(m ,X ,y ,split):
 
     if X.shape[0] == 0:
         return
