@@ -62,7 +62,7 @@ ViennaRNA: https://www.tbi.univie.ac.at/RNA/#
 ### 8. Generate k-mer features
 
 ```bash
-python data/feature_generation.py
+python data/kmer_feature_generation.py
 ```
 
 ### 9. Generate qmfe features
